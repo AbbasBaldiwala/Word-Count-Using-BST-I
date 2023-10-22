@@ -7,79 +7,56 @@ using namespace std;
 
 const int LETTER_OFFSET_IN_ASCII = 32, MIN_WORD_LEN = 4;
 
+/*preconditions: string variable must exist
+postconditions: lower case string is returned
+*/
 string ToLower(string str);
 
-string ProcessString(string str);
+/*precondiitons: string variable must exist
+postconditons: string is returned without any punctuation and letters after apostrophes are removed
+*/
+string ProcessWord(string str);
+
+/*
+preconditons: file must be opened without errors
+postconditions: file will not include any puntuation and all words 4 characters or less are removed
+*/
+void ProcessInputFile(fstream& ioFile);
 
 
 int main()
 {
-    // Note we have to specify both in and out because we're using fstream
-    std::fstream iofile{ "Test_Data.txt", std::ios::in | std::ios::out };
+    std::fstream ioFile{ "Test_Data.txt", std::ios::in | std::ios::out };
 
-    // If we couldn't open iofile, print an error
-    if (!iofile)
+    
+    if (!ioFile)
     {
-        // Print an error and exit
-        std::cerr << "Uh oh, Test_Data.txt could not be opened!\n";
+        std::cerr << "Test_Data.txt could not be opened\n";
         return 1;
     }
-    string word;
-    stringstream fillBlank;
-    while (iofile >> word) {
-        word = ToLower(word);
-        int len = word.length();
-        iofile.seekg(-1 * len, std::ios::cur);
-        iofile << word;
-        iofile.seekg(iofile.tellg(), std::ios::beg);
-    }
 
-    iofile.clear();  
-    iofile.seekg(0, std::ios::beg);
-    char ch;
-    while (iofile.get(ch)) {
-        if (ch == '\'') {
-            iofile.seekg(-1, std::ios::cur);
-            iofile << "  ";
-            iofile.seekg(iofile.tellg(), std::ios::beg);
-        }
-        else if (!((ch >= 'a') && (ch <= 'z'))) {
-            iofile.seekg(-1, std::ios::cur);
-            iofile << " ";
-            iofile.seekg(iofile.tellg(), std::ios::beg);
-        }
-    }
-    int len;
-    iofile.clear();
-    iofile.seekg(0, std::ios::beg);
-    while (iofile >> word) {
-        len = word.length();
-        if (!(len > MIN_WORD_LEN)) {
-            fillBlank.str("");
-            fillBlank << setw(len) << "";
-            iofile.seekg(-1*len, std::ios::cur);
-            iofile << fillBlank.str();
-            iofile.seekg(iofile.tellg(), std::ios::beg);
-        }
-    }
+    ProcessInputFile(ioFile);
 
-    iofile.close();
+    ioFile.close();
     return 0;
     }
 
-string ProcessString(string str) {
-    string processedString = "";
+string ProcessWord(string str) {
+    string processedWord = "";
     size_t strLen = str.length();
     for (int i = 0; i < strLen; i++) {
         char ch = str[i];
         if (((ch >= 'a') && (ch <= 'z'))) {
-            processedString += ch;
+            processedWord += ch;
         }
-        else if (ch == '\'') { //skips letter after apostrophe
-            i++;
+        else if (ch == '\'') { //skips everything after apostrophe
+            i = strLen;
         }
     }
-    return processedString;
+    if (!(processedWord.length() > MIN_WORD_LEN)) {
+        processedWord = "";
+    }
+    return processedWord;
 }
 
 string ToLower(string str) {
@@ -92,4 +69,21 @@ string ToLower(string str) {
         lowerCaseStr += ch;
     }
     return lowerCaseStr;
+}
+
+void ProcessInputFile(fstream& ioFile) {
+    string word;
+    while (ioFile >> word) {
+        stringstream fillSpace("");
+        int originalLen = word.length();
+
+        word = ToLower(word);
+        word = ProcessWord(word);
+
+        fillSpace << setw(originalLen) << word;
+
+        ioFile.seekg(-1 * originalLen, std::ios::cur);
+        ioFile << fillSpace.str();
+        ioFile.seekg(ioFile.tellg(), std::ios::beg);
+    }
 }
