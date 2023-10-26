@@ -271,12 +271,7 @@ void BinarySearchTree::InsertWord(string insertWord) {
         while (current != nullptr)
         {
             trailCurrent = current;
-            if (current->word == insertWord)
-            {   
-                //ask if should return
-                return;
-            }
-            else if (current->word > insertWord)
+            if (current->word > insertWord)
                 current = current->leftLink;
             else
                 current = current->rightLink;
