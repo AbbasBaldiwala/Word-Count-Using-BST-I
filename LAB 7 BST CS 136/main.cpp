@@ -7,12 +7,19 @@ using namespace std;
 
 const int LETTER_OFFSET_IN_ASCII = 32, MIN_WORD_LEN = 4, SETW_SIZE = 15;
 
+enum Menu {
+    UPDATE_INPUT_FILE = 1, BUILD_AND_PRINT_BST = 2, QUIT = 3
+};
+
+
+
 class Node {
 public:
     string word;
     int count;
     Node* leftLink = nullptr;
     Node* rightLink = nullptr;
+
 };
 
 class BinarySearchTree {
@@ -29,17 +36,11 @@ public:
 
     int GetHeight() const { return Height(root); }
 
-    int GetNodeCount() const { return NodeCount(root); }
-
-    int GetLeavesCount() const { return LeavesCount(root); }
-
     void DestroyTree();
 
     bool SearchTree(string word);
 
     void InsertWord(string word);
-
-    void DeleteNode(string word);
 
     BinarySearchTree(const BinarySearchTree& otherTree);
 
@@ -64,11 +65,6 @@ private:
     int Height(Node* p) const;
 
     int Max(int x, int y) const;
-
-    int NodeCount(Node* p) const;
-
-    int LeavesCount(Node* p) const;
-
 };
 
 /*preconditions: string variable must exist
@@ -85,39 +81,55 @@ string ProcessWord(string str);
 preconditons: file must be opened without errors
 postconditions: file will not include any puntuation and all words 4 characters or less are removed
 */
-void ProcessInputFile(fstream& ioFile, BinarySearchTree& BST);
+void ProcessInputFile();
+
+/*
+preconditions: the Binary search tree must exist and the header musht exist
+postconditions: all the words will be printed to the screen
+*/
+void BuildAndPrintBST(BinarySearchTree BST, string header);
+
+/*
+
+*/
+void ClearInvalidInput(string errMsg); //clears cin, clears the keyboard buffer, prints an error message
 
 
 int main()
 {
-    cout << left;
-    std::fstream ioFile{ "Test_Data.txt", std::ios::in | std::ios::out };
-
-    
-    if (!ioFile)
-    {
-        std::cerr << "Test_Data.txt could not be opened\n";
-        return 1;
-    }
-
-    stringstream header;
-    header << left << setw(SETW_SIZE) << "WORD" << "COUNT" << "\n";
-    cout << header.str();
-
+    int userChoice;
     BinarySearchTree BST;
+    stringstream headerSS;
+    headerSS << left << setw(SETW_SIZE) << "WORD" << "COUNT" << "\n\n";
+    string header = headerSS.str();
+    cout << left;
     
-    ProcessInputFile(ioFile, BST);
+    do {
+        cout << "\n\nMENU: \n"
+            "1. UPDATE INPUT FILE\n"
+            "2. BUILD AND PRINT BST\n"
+            "3. QUIT\n\n";
+        cin >> userChoice;
+        switch (userChoice) {
+        case UPDATE_INPUT_FILE:
+            ProcessInputFile();
+            break;
+        case BUILD_AND_PRINT_BST:
+            try {
+                BuildAndPrintBST(BST, header);
+            }
+            catch (const std::bad_alloc error) {
+                std::cerr << "Exception caught, Could not allocate memory: " << error.what() << "\n";
+            }
+            break;
+        case QUIT:
+            cout << "\nQUITTING..." << endl;
+            break;
+        default:
+            ClearInvalidInput("INVALID MENU SELECTION");
+        }
+    } while (userChoice != QUIT);
 
-    cout << "Inorder Traversal: \n";
-    BST.InorderTraversal();
-
-    cout << "Preorder Traversal: \n";
-    BST.PreorderTraversal();
-
-    cout << "Postorder Traversal: \n";
-    BST.PostorderTraversal();
-
-    ioFile.close();
     return 0;
     }
 
@@ -307,7 +319,20 @@ string ToLower(string str) {
     return lowerCaseStr;
 }
 
-void ProcessInputFile(fstream& ioFile, BinarySearchTree& BST) {
+void ProcessInputFile() {
+    std::fstream ioFile{ "Test_Data.txt", std::ios::in | std::ios::out };
+
+    if (!ioFile) {
+        cout << "Input file not found. Exiting the program." << endl;
+        system("pause");
+        exit(EXIT_FAILURE);
+    }
+    if (ioFile.peek() == EOF) {
+        cout << "The input file is empty. Quitting the program." << endl;
+        ioFile.close();
+        system("pause");
+        exit(EXIT_FAILURE);
+    }
     string word;
     while (ioFile >> word) {
         stringstream fillSpace("");
@@ -321,8 +346,202 @@ void ProcessInputFile(fstream& ioFile, BinarySearchTree& BST) {
         ioFile.seekg(-1 * originalLen, std::ios::cur);
         ioFile << fillSpace.str();
         ioFile.seekg(ioFile.tellg(), std::ios::beg);
+    }
+    cout << "INPUT FILE UPDATED\n";
+    ioFile.close();
+}
+
+void BuildAndPrintBST(BinarySearchTree BST, string header) {
+    
+    ifstream inFile("Test_Data.txt"); 
+    if (!inFile) {
+        cout << "Input file not found. Exiting the program." << endl;
+        system("pause");
+        exit(EXIT_FAILURE);
+    }
+    if (inFile.peek() == EOF) {
+        cout << "The input file is empty. Quitting the program." << endl;
+        inFile.close();
+        system("pause");
+        exit(EXIT_FAILURE);
+    }
+
+    string word;
+    while (inFile >> word) {
         if (!BST.SearchTree(word) && word != "") {
             BST.InsertWord(word);
         }
     }
+    cout << header;
+    BST.InorderTraversal();
+    BST.DestroyTree();
+    inFile.close();
 }
+
+void ClearInvalidInput(string errMsg) {
+    cout << "\n" << errMsg << "\n";
+    cin.clear();
+    cin.ignore(numeric_limits<streamsize>::max(), '\n');
+}
+
+
+//TEST 1
+/*
+
+MENU:
+1. UPDATE INPUT FILE
+2. BUILD AND PRINT BST
+3. QUIT
+
+1
+INPUT FILE UPDATED
+
+
+MENU:
+1. UPDATE INPUT FILE
+2. BUILD AND PRINT BST
+3. QUIT
+
+2
+WORD           COUNT
+
+about          1
+accurately     2
+actually       1
+addition       1
+agenda         1
+agree          2
+almost         1
+always         1
+anything       1
+basically      1
+because        4
+become         1
+believe        1
+close          1
+congress       6
+democrat       1
+democrats      2
+different      2
+divided        1
+division       1
+either         3
+everyone       1
+falcon         1
+fewer          1
+focused        1
+forced         1
+fully          1
+going          1
+hinders        1
+ideas          2
+impact         1
+increase       1
+instead        1
+major          1
+members        2
+might          1
+other          2
+parties        2
+partisan       1
+partisanship   1
+party          2
+passed         1
+passing        1
+people         4
+population     1
+power          1
+problems       1
+professor      1
+progress       1
+rather         1
+reality        1
+represent      4
+representing   1
+republican     1
+republicans    2
+should         1
+showing        1
+sides          2
+siding         1
+solving        1
+split          1
+states         2
+stopping       1
+supposed       2
+their          3
+umbrella       1
+under          1
+united         1
+voted          2
+voters         1
+
+
+MENU:
+1. UPDATE INPUT FILE
+2. BUILD AND PRINT BST
+3. QUIT
+
+3
+
+QUITTING...
+*/
+
+//TEST 2
+/*
+
+MENU:
+1. UPDATE INPUT FILE
+2. BUILD AND PRINT BST
+3. QUIT
+
+dsfa
+
+INVALID MENU SELECTION
+
+
+MENU:
+1. UPDATE INPUT FILE
+2. BUILD AND PRINT BST
+3. QUIT
+
+5
+
+INVALID MENU SELECTION
+
+
+MENU:
+1. UPDATE INPUT FILE
+2. BUILD AND PRINT BST
+3. QUIT
+
+3
+
+QUITTING...
+
+*/
+
+//TEST 3 (empty input file)
+/*
+MENU:
+1. UPDATE INPUT FILE
+2. BUILD AND PRINT BST
+3. QUIT
+
+1
+The input file is empty. Quitting the program.
+Press any key to continue . . .
+*/
+
+//TEST 4 (no input file found)
+/*
+
+MENU:
+1. UPDATE INPUT FILE
+2. BUILD AND PRINT BST
+3. QUIT
+
+1
+Input file not found. Exiting the program.
+Press any key to continue . . .
+*/
