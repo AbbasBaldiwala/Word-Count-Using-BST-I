@@ -3,6 +3,8 @@
 #include <string>
 #include <iomanip>
 #include <sstream>
+#include <limits>
+
 using namespace std;
 
 const int LETTER_OFFSET_IN_ASCII = 32, MIN_WORD_LEN = 4, SETW_SIZE = 15;
@@ -16,88 +18,133 @@ enum Menu {
 class Node {
 public:
     string word;
-    int count;
+    int count = 0;
     Node* leftLink = nullptr;
     Node* rightLink = nullptr;
-
 };
 
 class BinarySearchTree {
 public:
+    /*pre:RHS tree must exist
+    post: LHS will be a copy of RHS tree*/
     const BinarySearchTree& operator=(const BinarySearchTree& RHS);
 
+    /*pre: root exists
+    post: returns if the tree is empty*/
     bool IsEmpty() { return (root == nullptr); }
 
-    void InorderTraversal() { Inorder(root); }
+    /*pre:Inorder function exists
+    post: prints the inorder traversal of the tree*/
+    void TraverseInorder() { Inorder(root); }
 
-    void PreorderTraversal() { Preorder(root); }
+    /*pre:Preorder function exists
+    post: prints the preorder traversal of the tree*/
+    void TraversePreorder() { Preorder(root); }
 
-    void PostorderTraversal() { Postorder(root); }
+    /*pre: Postorder function exists
+    post: prints the postorder traversal of the tree*/
+    void TraversePostOrder() { Postorder(root); }
 
+    /*pre: Height function exists
+    post: returns the height of the tree*/
     int GetHeight() const { return Height(root); }
 
-    void DestroyTree();
+    /*pre: Destroy function exists
+    post: tree is destroyed*/
+    void DestroyTree(){ Destroy(root); }
 
+    /*pre: String must be correctly passed as a parameter
+    post: returns if the string is in the tree*/
     bool SearchTree(string word);
 
+    /*pre: String must be correctly passed as a parameter
+    post: inserts the string if it does not already exist in tree*/
     void InsertWord(string word);
 
+    /*pre: otherTree exists
+    post: A copy of otherTree is created*/
     BinarySearchTree(const BinarySearchTree& otherTree);
 
+    /*pre:none
+    post: tree object is created*/
     BinarySearchTree() { root = nullptr; }
 
+    /*pre: Destroy function exists
+    post: tree is destroyed*/
     ~BinarySearchTree() { Destroy(root); }
 
 protected:
     Node* root = nullptr;
 
 private:
+    /*pre: two tree objects exist
+    post: first object becomes copy of second*/
     void CopyTree(Node*& copiedTreeRoot, Node* otherTreeRoot);
 
+    /*pre: none
+    post: tree is destroyed*/
     void Destroy(Node*& p);
 
+    /*pre: none
+    post: prints the inorder traversal of the tree*/
     void Inorder(Node* p) const;
 
+    /*pre: none
+    post: prints the preorder traversal of the tree*/
     void Preorder(Node* p) const;
 
+    /*pre: none
+    post: prints the postorder traversal of the tree*/
     void Postorder(Node* p) const;
 
+    /*pre: none
+    post: returns height of the tree*/
     int Height(Node* p) const;
 
+    /*pre: two integers must be passed in the parameters
+    post: returns the larger of the two integers*/
     int Max(int x, int y) const;
 };
 
-/*preconditions: string variable must exist
-postconditions: lower case string is returned
+/*pre: string variable must exist
+post: lower case string is returned
 */
 string ToLower(string str);
 
-/*precondiitons: string variable must exist
-postconditons: string is returned without any punctuation and letters after apostrophes are removed
+/*pre: string variable must exist
+post: string is returned without any punctuation and letters after apostrophes are removed
 */
 string ProcessWord(string str);
 
 /*
-preconditons: file must be opened without errors
-postconditions: file will not include any puntuation and all words 4 characters or less are removed
+pre: file name must exist and be properly declared
+post: file will not include any puntuation and all words 4 characters or less are removed
 */
-void ProcessInputFile();
+void ProcessInputFile(string FileName);
 
 /*
-preconditions: the Binary search tree must exist and the header musht exist
-postconditions: all the words will be printed to the screen
+pre: the Binary search tree must exist and the header musht exist
+post: all the words will be printed to the screen
 */
-void BuildAndPrintBST(BinarySearchTree BST, string header);
+void BuildBST(BinarySearchTree& BST);
 
 /*
-
+pre:BST and header string must exist
+post: the BST gets filled with words and printed to screen
 */
-void ClearInvalidInput(string errMsg); //clears cin, clears the keyboard buffer, prints an error message
+void BuildAndPrintBST(BinarySearchTree& BST, string header);
+
+/*
+pre: none
+post: clears cin, clears the keyboard buffer, prints an error message
+*/
+void ClearInvalidInput(string errMsg);
 
 
 int main()
 {
     int userChoice;
+    string FileName = "Test_Data.txt";
     BinarySearchTree BST;
     stringstream headerSS;
     headerSS << left << setw(SETW_SIZE) << "WORD" << "COUNT" << "\n\n";
@@ -110,17 +157,13 @@ int main()
             "2. BUILD AND PRINT BST\n"
             "3. QUIT\n\n";
         cin >> userChoice;
+
         switch (userChoice) {
         case UPDATE_INPUT_FILE:
-            ProcessInputFile();
+            ProcessInputFile(FileName);
             break;
         case BUILD_AND_PRINT_BST:
-            try {
-                BuildAndPrintBST(BST, header);
-            }
-            catch (const std::bad_alloc error) {
-                std::cerr << "Exception caught, Could not allocate memory: " << error.what() << "\n";
-            }
+            BuildAndPrintBST(BST, header);
             break;
         case QUIT:
             cout << "\nQUITTING..." << endl;
@@ -135,17 +178,19 @@ int main()
 
 
 //BST METHODS
+
+
 void BinarySearchTree::Inorder(Node* p) const {
     if (p != nullptr) {
         Inorder(p->leftLink);
-        cout << left << setw(SETW_SIZE) << p->word << right << p->count << "\n";
+        cout << setw(SETW_SIZE) << p->word <<  p->count << "\n";
         Inorder(p->rightLink);
     }
 }
 
 void BinarySearchTree::Preorder(Node* p) const {
     if (p != nullptr) {
-        cout << left << setw(SETW_SIZE) << p->word << right << p->count << "\n";
+        cout << setw(SETW_SIZE) << p->word << p->count << "\n";
         Preorder(p->leftLink);
         Preorder(p->rightLink);
     }
@@ -155,7 +200,7 @@ void BinarySearchTree::Postorder(Node* p) const {
     if (p != nullptr) {
         Postorder(p->leftLink);
         Postorder(p->rightLink);
-        cout << left << setw(SETW_SIZE) << p->word << right << p->count << "\n";
+        cout << setw(SETW_SIZE) << p->word << p->count << "\n";
     }
 }
 
@@ -199,30 +244,41 @@ void BinarySearchTree::Destroy(Node*& p) {
     }
 }
 
-void BinarySearchTree::DestroyTree() {
-    Destroy(root);
-}
-
 const BinarySearchTree& BinarySearchTree::operator=(const BinarySearchTree& RHS) {
-    if (this != &RHS) {
-        if (RHS.root == nullptr) {
-            root = nullptr;
+    Node* tempRoot = nullptr;
+    try {
+        if (this != &RHS) {
+            if (RHS.root == nullptr) {
+                root = nullptr;
+            }
+            else {
+                CopyTree(tempRoot, RHS.root);
+                Destroy(root);
+                root = tempRoot;
+            }
         }
-        else {
-            Destroy(root);
-            CopyTree(root, RHS.root);
-        }
+    }
+    catch (std::bad_alloc error) {
+        //destroy root or tempRoot?
+        Destroy(root);
+        std::cerr << "Exception caught, Could not allocate memory. Copy Failed, original tree is intact " << error.what() << "\n";
     }
     return *this;
 }
 
 BinarySearchTree::BinarySearchTree(const BinarySearchTree& otherTree) {
-    if (otherTree.root == nullptr) {
-        root = nullptr;
+    try {
+        if (otherTree.root == nullptr) {
+            root = nullptr;
+        }
+        else {
+            CopyTree(root, otherTree.root);
+        }
     }
-    else {
+    catch (std::bad_alloc error) {
         Destroy(root);
-        CopyTree(root, otherTree.root);
+        root = nullptr;
+        std::cerr << "Exception caught, Could not allocate memory. Copy Failed " << error.what() << "\n";
     }
 } 
 
@@ -253,36 +309,52 @@ bool BinarySearchTree::SearchTree(string searchWord) {
 }
 
 void BinarySearchTree::InsertWord(string insertWord) {
-    Node* current;
-    Node* trailCurrent = nullptr;
-    Node* newNode;
+        
+        Node* current = nullptr;
+		Node* trailCurrent = nullptr;
+		Node* newNode;
 
-    newNode = new Node;
-    newNode->word = insertWord;
-    newNode->count = 1;
-    newNode->leftLink = nullptr;
-    newNode->rightLink = nullptr;
-   
-    if (root == nullptr)
-        root = newNode;
-    else
-    {
-        current = root;
-        while (current != nullptr)
-        {
-            trailCurrent = current;
-            if (current->word > insertWord)
-                current = current->leftLink;
-            else
-                current = current->rightLink;
-        }
-        if (trailCurrent->word > insertWord)
-            trailCurrent->leftLink = newNode;
-        else
-            trailCurrent->rightLink = newNode;
-    }
+		newNode = new Node;
+		newNode->word = insertWord;
+		newNode->count = 1;
+		newNode->leftLink = nullptr;
+		newNode->rightLink = nullptr;
+
+        bool wordInTree = false;
+
+		if (root == nullptr) {
+			root = newNode;
+		}
+		else
+		{
+			current = root;
+			while (current != nullptr && !wordInTree)
+			{
+				trailCurrent = current;
+                if (current->word == insertWord) {
+                    current->count += 1;
+                    wordInTree = true;
+                }
+				else if (current->word > insertWord) {
+					current = current->leftLink;
+				}
+				else {
+					current = current->rightLink;
+				}
+			}
+            if (!wordInTree) {
+                if (trailCurrent->word > insertWord) {
+                    trailCurrent->leftLink = newNode;
+                }
+                else {
+                    trailCurrent->rightLink = newNode;
+                }
+            }
+		}
 }
 
+
+//MAIN FUNCTIONS
 
 string ProcessWord(string str) {
     string processedWord = "";
@@ -314,8 +386,8 @@ string ToLower(string str) {
     return lowerCaseStr;
 }
 
-void ProcessInputFile() {
-    std::fstream ioFile{ "Test_Data.txt", std::ios::in | std::ios::out };
+void ProcessInputFile(string FileName) {
+    std::fstream ioFile{ FileName, std::ios::in | std::ios::out };
 
     if (!ioFile) {
         cout << "Input file not found. Exiting the program." << endl;
@@ -346,8 +418,8 @@ void ProcessInputFile() {
     ioFile.close();
 }
 
-void BuildAndPrintBST(BinarySearchTree BST, string header) {
-    
+void BuildBST(BinarySearchTree& BST) {
+    BST.DestroyTree();
     ifstream inFile("Test_Data.txt"); 
     if (!inFile) {
         cout << "Input file not found. Exiting the program." << endl;
@@ -363,14 +435,21 @@ void BuildAndPrintBST(BinarySearchTree BST, string header) {
 
     string word;
     while (inFile >> word) {
-        if (!BST.SearchTree(word) && word != "") {
-            BST.InsertWord(word);
-        }
+        BST.InsertWord(word);
     }
-    cout << header;
-    BST.InorderTraversal();
-    BST.DestroyTree();
     inFile.close();
+}
+
+void BuildAndPrintBST(BinarySearchTree& BST, string header){
+    try {
+        BuildBST(BST);
+        cout << header;
+        BST.TraverseInorder();
+    }
+    catch (const std::bad_alloc error) {
+        std::cerr << "Exception caught, Could not allocate memory. Destroying Tree " << error.what() << "\n";
+        BST.DestroyTree();
+    }
 }
 
 void ClearInvalidInput(string errMsg) {
