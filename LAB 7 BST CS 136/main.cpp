@@ -1,6 +1,5 @@
 #include <iostream>
 #include <fstream>
-#include <string>
 #include <iomanip>
 #include <sstream>
 #include <limits>
@@ -259,8 +258,7 @@ const BinarySearchTree& BinarySearchTree::operator=(const BinarySearchTree& RHS)
         }
     }
     catch (std::bad_alloc error) {
-        //destroy root or tempRoot?
-        Destroy(root);
+        Destroy(tempRoot);
         std::cerr << "Exception caught, Could not allocate memory. Copy Failed, original tree is intact " << error.what() << "\n";
     }
     return *this;
